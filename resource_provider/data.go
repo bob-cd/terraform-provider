@@ -26,7 +26,7 @@ func DataResourceProviders() *schema.Resource {
 
 func resourceProvidersRead(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-  resourceProviders, err := GetAllResourceProviders()
+	resourceProviders, err := GetAllResourceProviders()
 	if err != nil {
 		return diag.FromErr(err)
 	}

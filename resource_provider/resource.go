@@ -89,9 +89,9 @@ func create(ctx context.Context, data *schema.ResourceData, m interface{}) diag.
 		return diag.FromErr(err)
 	}
 
-  if err := WaitForCondition(reconcile(providerName, providerUrl), 10, 1 * time.Second); err != nil {
+	if err := WaitForCondition(reconcile(providerName, providerUrl), 10, 1*time.Second); err != nil {
 		return diag.FromErr(err)
-  }
+	}
 
 	data.SetId(providerName)
 
@@ -108,9 +108,9 @@ func update(ctx context.Context, data *schema.ResourceData, m interface{}) diag.
 		return diag.FromErr(err)
 	}
 
-  if err := WaitForCondition(reconcile(providerName, providerUrl), 10, 1 * time.Second); err != nil {
+	if err := WaitForCondition(reconcile(providerName, providerUrl), 10, 1*time.Second); err != nil {
 		return diag.FromErr(err)
-  }
+	}
 
 	read(ctx, data, m)
 
