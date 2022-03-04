@@ -1,0 +1,29 @@
+{:min-bb-version "0.4.0"
+
+ :tasks          {:requires ([babashka.fs :as fs])
+                  :init     (do
+                              (def binary "terraform-provider-bob")
+                              (def version "0.1.0")
+                              (defn os-arch
+                                []
+                                (let [lookup {"Mac OS X" "darwin"
+                                              "Linux"    "linux"}
+                                      os     (System/getProperty "os.name")
+                                      arch   (System/getProperty "os.arch")]
+                                  (format "%s_%s"
+                                          (lookup os)
+                                          arch)))
+                              (def install-dir
+                                (format "%s/.terraform.d/plugins/bob-cd/providers/bob/%s/%s"
+                                        (fs/home)
+                                        version
+                                        (os-arch))))
+
+                  build     {:doc  "Compile the binary"
+                             :task (shell (str "go build -o " binary))}
+
+                  install   {:doc     "Install the binary into plugins dir"
+                             :depends [build]
+                             :task    (do
+                                        (fs/create-dirs install-dir)
+                                        (fs/move binary install-dir))}}}
