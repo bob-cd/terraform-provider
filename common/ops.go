@@ -28,13 +28,13 @@ func WaitForCondition(condition func() bool, retries int, interval time.Duration
 
 func Reconcile(entity string, name string, url string) func() bool {
 	return func() bool {
-		allProviders, err := FetchAll("resource-provider")
+		allEntities, err := FetchAll(entity)
 		if err != nil {
 			return false
 		}
 
-		for _, provider := range allProviders {
-			if provider["name"] == name && provider["url"] == url {
+		for _, entity := range allEntities {
+			if entity["name"] == name && entity["url"] == url {
 				return true
 			}
 		}

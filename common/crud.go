@@ -49,7 +49,7 @@ func UpdateResource(entity string, data *schema.ResourceData) diag.Diagnostics {
 	var diags diag.Diagnostics
 	entityName := data.Get("name").(string)
 	entityUrl := data.Get("url").(string)
-	if err := Post("resource-provider", entityName, entityUrl); err != nil {
+	if err := Post(entity, entityName, entityUrl); err != nil {
 		return diag.FromErr(err)
 	}
 
