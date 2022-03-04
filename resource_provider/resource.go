@@ -120,5 +120,21 @@ func update(ctx context.Context, data *schema.ResourceData, m interface{}) diag.
 func delete(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	req, err := http.NewRequest(
+		"DELETE",
+		fmt.Sprintf("%s/resource-providers/%s", Host, data.Get("name").(string)),
+		nil,
+	)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = Client.Do(req)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	data.SetId("")
+
 	return diags
 }

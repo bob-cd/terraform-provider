@@ -26,4 +26,6 @@
                              :depends [build]
                              :task    (do
                                         (fs/create-dirs install-dir)
-                                        (fs/move binary install-dir))}}}
+                                        (fs/move binary install-dir {:replace-existing true})
+                                        (fs/delete-tree "examples/.terraform")
+                                        (fs/delete "examples/.terraform.lock.hcl"))}}}
