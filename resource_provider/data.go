@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/bob-cd/terraform-provider/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -26,7 +27,7 @@ func DataResourceProviders() *schema.Resource {
 
 func resourceProvidersRead(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	resourceProviders, err := getAllResourceProviders()
+	resourceProviders, err := common.FetchAll("resource-provider")
 	if err != nil {
 		return diag.FromErr(err)
 	}

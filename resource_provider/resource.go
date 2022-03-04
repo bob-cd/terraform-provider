@@ -1,14 +1,10 @@
 package resource_provider
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
-	"net/http"
 	"time"
 
-	"github.com/bob-cd/terraform-provider/common"
+	c "github.com/bob-cd/terraform-provider/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -23,72 +19,11 @@ func Resource() *schema.Resource {
 	}
 }
 
-func getAllResourceProviders() ([]map[string]string, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/resource-providers", common.Host), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	r, err := common.Client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer r.Body.Close()
-
-	var response map[string][]map[string]string
-	err = json.NewDecoder(r.Body).Decode(&response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response["message"], nil
-}
-
-func doPost(name string, url string) error {
-	postBody, _ := json.Marshal(map[string]string{
-		"url": url,
-	})
-
-	req, err := http.NewRequest(
-		"POST",
-		fmt.Sprintf("%s/resource-providers/%s", common.Host, name),
-		bytes.NewBuffer(postBody),
-	)
-	req.Header.Add("Content-Type", "application/json")
-	if err != nil {
-		return err
-	}
-
-	_, err = common.Client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func reconcile(name string, url string) func() bool {
-	return func() bool {
-		allProviders, err := getAllResourceProviders()
-		if err != nil {
-			return false
-		}
-
-		for _, provider := range allProviders {
-			if provider["name"] == name && provider["url"] == url {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
 func read(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	providerName := data.Id()
-	allProviders, err := getAllResourceProviders()
+	allProviders, err := c.FetchAll("resource-provider")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -107,11 +42,11 @@ func create(ctx context.Context, data *schema.ResourceData, m interface{}) diag.
 	var diags diag.Diagnostics
 	providerName := data.Get("name").(string)
 	providerUrl := data.Get("url").(string)
-	if err := doPost(providerName, providerUrl); err != nil {
+	if err := c.Post("resource-provider", providerName, providerUrl); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := common.WaitForCondition(reconcile(providerName, providerUrl), 10, 1*time.Second); err != nil {
+	if err := c.WaitForCondition(c.Reconcile("resource-provider", providerName, providerUrl), 10, 1*time.Second); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -126,11 +61,11 @@ func update(ctx context.Context, data *schema.ResourceData, m interface{}) diag.
 	var diags diag.Diagnostics
 	providerName := data.Get("name").(string)
 	providerUrl := data.Get("url").(string)
-	if err := doPost(providerName, providerUrl); err != nil {
+	if err := c.Post("resource-provider", providerName, providerUrl); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := common.WaitForCondition(reconcile(providerName, providerUrl), 10, 1*time.Second); err != nil {
+	if err := c.WaitForCondition(c.Reconcile("resource-provider", providerName, providerUrl), 10, 1*time.Second); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -141,18 +76,7 @@ func update(ctx context.Context, data *schema.ResourceData, m interface{}) diag.
 
 func delete(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	req, err := http.NewRequest(
-		"DELETE",
-		fmt.Sprintf("%s/resource-providers/%s", common.Host, data.Get("name").(string)),
-		nil,
-	)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	_, err = common.Client.Do(req)
-	if err != nil {
+	if err := c.Delete("resource-provider", data.Get("name").(string)); err != nil {
 		return diag.FromErr(err)
 	}
 
