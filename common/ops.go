@@ -9,10 +9,17 @@ import (
 	"time"
 )
 
-var (
-	Host   = "http://localhost:7777"
-	Client = &http.Client{Timeout: 10 * time.Second}
-)
+type Client struct {
+	Url    string
+	Client *http.Client
+}
+
+func NewClient(url string, timeout time.Duration) Client {
+	return Client{
+		Url:    url,
+		Client: &http.Client{Timeout: timeout},
+	}
+}
 
 func WaitForCondition(condition func() bool, retries int, interval time.Duration) error {
 	for i := 1; i <= retries; i++ {
@@ -26,9 +33,9 @@ func WaitForCondition(condition func() bool, retries int, interval time.Duration
 	return errors.New("timeout")
 }
 
-func Reconcile(entity string, name string, url string) func() bool {
+func (c Client) Reconcile(entity string, name string, url string) func() bool {
 	return func() bool {
-		allEntities, err := FetchAll(entity)
+		allEntities, err := c.FetchAll(entity)
 		if err != nil {
 			return false
 		}
@@ -43,13 +50,13 @@ func Reconcile(entity string, name string, url string) func() bool {
 	}
 }
 
-func FetchAll(entity string) ([]map[string]string, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%ss", Host, entity), nil)
+func (c Client) FetchAll(entity string) ([]map[string]string, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%ss", c.Url, entity), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	r, err := Client.Do(req)
+	r, err := c.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -64,14 +71,14 @@ func FetchAll(entity string) ([]map[string]string, error) {
 	return response["message"], nil
 }
 
-func Post(entity string, name string, url string) error {
+func (c Client) Post(entity string, name string, url string) error {
 	postBody, _ := json.Marshal(map[string]string{
 		"url": url,
 	})
 
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("%s/%ss/%s", Host, entity, name),
+		fmt.Sprintf("%s/%ss/%s", c.Url, entity, name),
 		bytes.NewBuffer(postBody),
 	)
 	req.Header.Add("Content-Type", "application/json")
@@ -79,7 +86,7 @@ func Post(entity string, name string, url string) error {
 		return err
 	}
 
-	_, err = Client.Do(req)
+	_, err = c.Client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -87,14 +94,14 @@ func Post(entity string, name string, url string) error {
 	return nil
 }
 
-func Delete(entity string, name string) error {
+func (c Client) Delete(entity string, name string) error {
 	req, err := http.NewRequest(
 		"DELETE",
-		fmt.Sprintf("%s/%ss/%s", Host, entity, name),
+		fmt.Sprintf("%s/%ss/%s", c.Url, entity, name),
 		nil,
 	)
 
-	_, err = Client.Do(req)
+	_, err = c.Client.Do(req)
 
 	return err
 }

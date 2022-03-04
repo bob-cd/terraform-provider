@@ -19,17 +19,17 @@ func Resource() *schema.Resource {
 }
 
 func read(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return c.ReadResource("artifact-store", data)
+	return c.ReadResource("artifact-store", data, meta.(c.Client))
 }
 
 func create(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return c.CreateResource("artifact-store", data)
+	return c.CreateResource("artifact-store", data, meta.(c.Client))
 }
 
 func update(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return c.UpdateResource("artifact-store", data)
+	return c.UpdateResource("artifact-store", data, meta.(c.Client))
 }
 
 func delete(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return c.DeleteResource("artifact-store", data)
+	return c.DeleteResource("artifact-store", data, meta.(c.Client))
 }

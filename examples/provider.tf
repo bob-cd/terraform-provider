@@ -6,3 +6,8 @@ terraform {
     }
   }
 }
+
+provider "bob" {
+  url     = "http://localhost:7777" # default
+  timeout = 10000                   # in ms, default
+}

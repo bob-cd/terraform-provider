@@ -7,11 +7,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ReadResource(entity string, data *schema.ResourceData) diag.Diagnostics {
+func ReadResource(entity string, data *schema.ResourceData, c Client) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	entityName := data.Id()
-	allEntities, err := FetchAll(entity)
+	allEntities, err := c.FetchAll(entity)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -26,45 +26,45 @@ func ReadResource(entity string, data *schema.ResourceData) diag.Diagnostics {
 	return diags
 }
 
-func CreateResource(entity string, data *schema.ResourceData) diag.Diagnostics {
+func CreateResource(entity string, data *schema.ResourceData, c Client) diag.Diagnostics {
 	var diags diag.Diagnostics
 	entityName := data.Get("name").(string)
 	entityUrl := data.Get("url").(string)
-	if err := Post(entity, entityName, entityUrl); err != nil {
+	if err := c.Post(entity, entityName, entityUrl); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := WaitForCondition(Reconcile(entity, entityName, entityUrl), 10, 1*time.Second); err != nil {
+	if err := WaitForCondition(c.Reconcile(entity, entityName, entityUrl), 10, 1*time.Second); err != nil {
 		return diag.FromErr(err)
 	}
 
 	data.SetId(entityName)
 
-	ReadResource(entity, data)
+	ReadResource(entity, data, c)
 
 	return diags
 }
 
-func UpdateResource(entity string, data *schema.ResourceData) diag.Diagnostics {
+func UpdateResource(entity string, data *schema.ResourceData, c Client) diag.Diagnostics {
 	var diags diag.Diagnostics
 	entityName := data.Get("name").(string)
 	entityUrl := data.Get("url").(string)
-	if err := Post(entity, entityName, entityUrl); err != nil {
+	if err := c.Post(entity, entityName, entityUrl); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := WaitForCondition(Reconcile(entity, entityName, entityUrl), 10, 1*time.Second); err != nil {
+	if err := WaitForCondition(c.Reconcile(entity, entityName, entityUrl), 10, 1*time.Second); err != nil {
 		return diag.FromErr(err)
 	}
 
-	ReadResource(entity, data)
+	ReadResource(entity, data, c)
 
 	return diags
 }
 
-func DeleteResource(entity string, data *schema.ResourceData) diag.Diagnostics {
+func DeleteResource(entity string, data *schema.ResourceData, c Client) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if err := Delete(entity, data.Get("name").(string)); err != nil {
+	if err := c.Delete(entity, data.Get("name").(string)); err != nil {
 		return diag.FromErr(err)
 	}
 
