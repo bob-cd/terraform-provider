@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/bob-cd/terraform-provider/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -22,6 +23,27 @@ func Resource() *schema.Resource {
 	}
 }
 
+func getAllResourceProviders() ([]map[string]string, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/resource-providers", common.Host), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := common.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	var response map[string][]map[string]string
+	err = json.NewDecoder(r.Body).Decode(&response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response["message"], nil
+}
+
 func doPost(name string, url string) error {
 	postBody, _ := json.Marshal(map[string]string{
 		"url": url,
@@ -29,7 +51,7 @@ func doPost(name string, url string) error {
 
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("%s/resource-providers/%s", Host, name),
+		fmt.Sprintf("%s/resource-providers/%s", common.Host, name),
 		bytes.NewBuffer(postBody),
 	)
 	req.Header.Add("Content-Type", "application/json")
@@ -37,7 +59,7 @@ func doPost(name string, url string) error {
 		return err
 	}
 
-	_, err = Client.Do(req)
+	_, err = common.Client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -47,7 +69,7 @@ func doPost(name string, url string) error {
 
 func reconcile(name string, url string) func() bool {
 	return func() bool {
-		allProviders, err := GetAllResourceProviders()
+		allProviders, err := getAllResourceProviders()
 		if err != nil {
 			return false
 		}
@@ -66,7 +88,7 @@ func read(ctx context.Context, data *schema.ResourceData, m interface{}) diag.Di
 	var diags diag.Diagnostics
 
 	providerName := data.Id()
-	allProviders, err := GetAllResourceProviders()
+	allProviders, err := getAllResourceProviders()
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -89,7 +111,7 @@ func create(ctx context.Context, data *schema.ResourceData, m interface{}) diag.
 		return diag.FromErr(err)
 	}
 
-	if err := WaitForCondition(reconcile(providerName, providerUrl), 10, 1*time.Second); err != nil {
+	if err := common.WaitForCondition(reconcile(providerName, providerUrl), 10, 1*time.Second); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -108,7 +130,7 @@ func update(ctx context.Context, data *schema.ResourceData, m interface{}) diag.
 		return diag.FromErr(err)
 	}
 
-	if err := WaitForCondition(reconcile(providerName, providerUrl), 10, 1*time.Second); err != nil {
+	if err := common.WaitForCondition(reconcile(providerName, providerUrl), 10, 1*time.Second); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -122,14 +144,14 @@ func delete(ctx context.Context, data *schema.ResourceData, m interface{}) diag.
 
 	req, err := http.NewRequest(
 		"DELETE",
-		fmt.Sprintf("%s/resource-providers/%s", Host, data.Get("name").(string)),
+		fmt.Sprintf("%s/resource-providers/%s", common.Host, data.Get("name").(string)),
 		nil,
 	)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	_, err = Client.Do(req)
+	_, err = common.Client.Do(req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
