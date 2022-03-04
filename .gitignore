@@ -15,3 +15,6 @@
 .clj-kondo/
 .nrepl-port
 terraform-provider-bob
+.terraform/
+.terraform.lock.hcl
+*tfstate*
