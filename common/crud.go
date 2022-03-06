@@ -68,12 +68,16 @@ func UpdateResource(entity string, data *schema.ResourceData, c Client) diag.Dia
 
 func DeleteResource(entity string, data *schema.ResourceData, c Client) diag.Diagnostics {
 	var diags diag.Diagnostics
+	entityName := data.Get("name").(string)
+	entityUrl := data.Get("url").(string)
 
-	if err := c.Delete(entity, data.Get("name").(string)); err != nil {
+	if err := c.Delete(entity, entityName); err != nil {
 		return diag.FromErr(err)
 	}
 
-	// TODO: Reconcile for deletion
+	if err := WaitForCondition(Complement(c.Reconcile(entity, entityName, entityUrl)), 10, 1*time.Second); err != nil {
+		return diag.FromErr(err)
+	}
 
 	data.SetId("")
 

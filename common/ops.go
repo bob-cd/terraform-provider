@@ -34,6 +34,12 @@ func WaitForCondition(condition func() bool, retries int, interval time.Duration
 	return errors.New("timeout")
 }
 
+func Complement(condition func() bool) func() bool {
+	return func() bool {
+		return !condition()
+	}
+}
+
 func (c Client) Reconcile(entity string, name string, url string) func() bool {
 	return func() bool {
 		allEntities, err := c.FetchAll(entity)
