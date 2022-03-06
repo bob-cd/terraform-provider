@@ -7,6 +7,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func write(entity string, data *schema.ResourceData, c Client) error {
+	entityName := data.Get("name").(string)
+	entityUrl := data.Get("url").(string)
+	if err := c.Post(entity, entityName, entityUrl); err != nil {
+		return err
+	}
+
+	if err := WaitForCondition(c.Reconcile(entity, entityName, entityUrl), 10, 1*time.Second); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func ReadResource(entity string, data *schema.ResourceData, c Client) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -28,17 +42,12 @@ func ReadResource(entity string, data *schema.ResourceData, c Client) diag.Diagn
 
 func CreateResource(entity string, data *schema.ResourceData, c Client) diag.Diagnostics {
 	var diags diag.Diagnostics
-	entityName := data.Get("name").(string)
-	entityUrl := data.Get("url").(string)
-	if err := c.Post(entity, entityName, entityUrl); err != nil {
+
+	if err := write(entity, data, c); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := WaitForCondition(c.Reconcile(entity, entityName, entityUrl), 10, 1*time.Second); err != nil {
-		return diag.FromErr(err)
-	}
-
-	data.SetId(entityName)
+	data.SetId(data.Get("name").(string))
 
 	ReadResource(entity, data, c)
 
@@ -47,13 +56,8 @@ func CreateResource(entity string, data *schema.ResourceData, c Client) diag.Dia
 
 func UpdateResource(entity string, data *schema.ResourceData, c Client) diag.Diagnostics {
 	var diags diag.Diagnostics
-	entityName := data.Get("name").(string)
-	entityUrl := data.Get("url").(string)
-	if err := c.Post(entity, entityName, entityUrl); err != nil {
-		return diag.FromErr(err)
-	}
 
-	if err := WaitForCondition(c.Reconcile(entity, entityName, entityUrl), 10, 1*time.Second); err != nil {
+	if err := write(entity, data, c); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -64,9 +68,12 @@ func UpdateResource(entity string, data *schema.ResourceData, c Client) diag.Dia
 
 func DeleteResource(entity string, data *schema.ResourceData, c Client) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	if err := c.Delete(entity, data.Get("name").(string)); err != nil {
 		return diag.FromErr(err)
 	}
+
+	// TODO: Reconcile for deletion
 
 	data.SetId("")
 
