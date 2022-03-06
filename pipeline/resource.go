@@ -147,12 +147,16 @@ func update(ctx context.Context, data *schema.ResourceData, meta interface{}) di
 func deleteResource(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(c.Client)
+	group := data.Get("group").(string)
+	name := data.Get("name").(string)
 
-	if err := client.DeletePipeline(data.Get("group").(string), data.Get("name").(string)); err != nil {
+	if err := client.DeletePipeline(group, name); err != nil {
 		return diag.FromErr(err)
 	}
 
-	// TODO: Reconcile for deletion
+	if err := c.WaitForCondition(client.ReconcilePipelineDeletion(group, name), 10, 1*time.Second); err != nil {
+		return diag.FromErr(err)
+	}
 
 	data.SetId("")
 

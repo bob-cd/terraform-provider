@@ -187,3 +187,11 @@ func (c Client) DeletePipeline(group string, name string) error {
 
 	return err
 }
+
+func (c Client) ReconcilePipelineDeletion(group string, name string) func() bool {
+	return func() bool {
+		_, err := c.FetchPipeline(group, name)
+
+		return err != nil && err.Error() == "no such pipeline"
+	}
+}
