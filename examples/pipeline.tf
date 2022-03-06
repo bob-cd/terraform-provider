@@ -10,7 +10,7 @@ resource "bob_pipeline" "dev_test" {
   resource {
     name     = "source"
     type     = "external"
-    provider = "resource-git"
+    provider = bob_resource_provider.resource_git.name
     params = {
       repo   = "https://github.com/lispyclouds/bob-example"
       branch = "main"
@@ -28,7 +28,7 @@ resource "bob_pipeline" "dev_test" {
     produces_artifact {
       name  = "app"
       path  = "app"
-      store = "artifact-local"
+      store = bob_artifact_store.artifact_local.name
     }
   }
 }
