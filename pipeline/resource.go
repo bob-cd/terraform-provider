@@ -80,13 +80,15 @@ func write(data *schema.ResourceData, client c.Client) error {
 		attrs["resources"] = resources
 	}
 
-	attrs = flattenArtifactProduction(attrs)
+	attrs = flattenArtifactProduction(attrs) // Yes
 
 	if err := client.PostPipeline(group, name, attrs); err != nil {
 		return err
 	}
 
-	if err := c.WaitForCondition(client.ReconcilePipeline(group, name), 10, 1*time.Second); err != nil {
+	attrs["group"] = group
+	attrs["name"] = name
+	if err := c.WaitForCondition(client.ReconcilePipeline(attrs), 10, 1*time.Second); err != nil {
 		return err
 	}
 

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"time"
 )
 
@@ -109,10 +110,11 @@ func (c Client) Delete(entity string, name string) error {
 	return err
 }
 
-func (c Client) ReconcilePipeline(group string, name string) func() bool {
+func (c Client) ReconcilePipeline(pipeline map[string]interface{}) func() bool {
 	return func() bool {
-		_, err := c.FetchPipeline(group, name)
-		return err == nil
+		expected, err := c.FetchPipeline(pipeline["group"].(string), pipeline["name"].(string))
+
+		return err == nil && reflect.DeepEqual(expected, pipeline)
 	}
 }
 
