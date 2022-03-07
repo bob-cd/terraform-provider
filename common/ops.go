@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"reflect"
 	"time"
 )
@@ -125,9 +126,11 @@ func (c Client) ReconcilePipeline(pipeline map[string]interface{}) func() bool {
 }
 
 func (c Client) FetchPipeline(group string, name string) (map[string]interface{}, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/pipelines", c.Url), nil)
-	req.URL.Query().Add("group", group)
-	req.URL.Query().Add("name", name)
+	params := url.Values{
+		"group": {group},
+		"name":  {name},
+	}
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/pipelines?%s", c.Url, params.Encode()), nil)
 	if err != nil {
 		return nil, err
 	}

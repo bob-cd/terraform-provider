@@ -30,17 +30,17 @@ func get(m map[string]interface{}, key string, def interface{}) interface{} {
 	return value
 }
 
-func flattenArtifactProduction(attrs map[string]interface{}) map[string]interface{} {
+func unwrapArtifactProduction(attrs map[string]interface{}) map[string]interface{} {
 	steps := attrs["steps"].([]interface{})
 
 	for _, step := range steps {
 		s := step.(map[string]interface{})
 		produces_artifact := s["produces_artifact"].([]interface{})
 
-		if len(produces_artifact) == 1 {
-			s["produces_artifact"] = produces_artifact[0]
-		} else {
+		if len(produces_artifact) == 0 {
 			delete(s, "produces_artifact")
+		} else {
+			s["produces_artifact"] = produces_artifact[0]
 		}
 	}
 
@@ -72,15 +72,19 @@ func write(data *schema.ResourceData, client c.Client) error {
 		"steps": data.Get("step"),
 	}
 
-	if vars := data.Get("vars"); vars != nil {
-		attrs["vars"] = vars
+	vars := data.Get("vars")
+	if vars == nil {
+		vars = map[string]string{}
 	}
+	attrs["vars"] = vars
 
-	if resources := data.Get("resource"); resources != nil {
-		attrs["resources"] = resources
+	resources := data.Get("resource")
+	if resources == nil {
+		resources = []interface{}{}
 	}
+	attrs["resources"] = resources
 
-	attrs = flattenArtifactProduction(attrs) // Yes
+	attrs = unwrapArtifactProduction(attrs) // Yes
 
 	if err := client.PostPipeline(group, name, attrs); err != nil {
 		return err
