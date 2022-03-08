@@ -3,7 +3,6 @@ package pipeline
 import (
 	"context"
 	"fmt"
-	"time"
 
 	c "github.com/bob-cd/terraform-provider/common"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -92,7 +91,7 @@ func write(data *schema.ResourceData, client c.Client) error {
 
 	attrs["group"] = group
 	attrs["name"] = name
-	if err := c.WaitForCondition(client.ReconcilePipeline(attrs), 10, 1*time.Second); err != nil {
+	if err := c.WaitForCondition(client.ReconcilePipeline(attrs), client.ReconcileRetries, client.ReconcileInterval); err != nil {
 		return err
 	}
 
@@ -158,7 +157,7 @@ func deleteResource(ctx context.Context, data *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	if err := c.WaitForCondition(client.ReconcilePipelineDeletion(group, name), 10, 1*time.Second); err != nil {
+	if err := c.WaitForCondition(client.ReconcilePipelineDeletion(group, name), client.ReconcileRetries, client.ReconcileInterval); err != nil {
 		return diag.FromErr(err)
 	}
 

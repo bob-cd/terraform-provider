@@ -1,8 +1,6 @@
 package common
 
 import (
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -14,7 +12,7 @@ func write(entity string, data *schema.ResourceData, c Client) error {
 		return err
 	}
 
-	if err := WaitForCondition(c.Reconcile(entity, entityName, entityUrl), 10, 1*time.Second); err != nil {
+	if err := WaitForCondition(c.Reconcile(entity, entityName, entityUrl), c.ReconcileRetries, c.ReconcileInterval); err != nil {
 		return err
 	}
 
@@ -75,7 +73,7 @@ func DeleteResource(entity string, data *schema.ResourceData, c Client) diag.Dia
 		return diag.FromErr(err)
 	}
 
-	if err := WaitForCondition(Complement(c.Reconcile(entity, entityName, entityUrl)), 10, 1*time.Second); err != nil {
+	if err := WaitForCondition(Complement(c.Reconcile(entity, entityName, entityUrl)), c.ReconcileRetries, c.ReconcileInterval); err != nil {
 		return diag.FromErr(err)
 	}
 

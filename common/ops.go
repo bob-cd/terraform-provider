@@ -12,14 +12,18 @@ import (
 )
 
 type Client struct {
-	Url    string
-	Client *http.Client
+	Url               string
+	Client            *http.Client
+	ReconcileRetries  int
+	ReconcileInterval time.Duration
 }
 
-func NewClient(url string, timeout time.Duration) Client {
+func NewClient(url string, timeout time.Duration, reconcileReties int, reconcileInterval time.Duration) Client {
 	return Client{
-		Url:    url,
-		Client: &http.Client{Timeout: timeout},
+		Url:               url,
+		Client:            &http.Client{Timeout: timeout},
+		ReconcileRetries:  reconcileReties,
+		ReconcileInterval: reconcileInterval,
 	}
 }
 

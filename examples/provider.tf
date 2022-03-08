@@ -8,6 +8,8 @@ terraform {
 }
 
 provider "bob" {
-  url     = "http://localhost:7777" # default
-  timeout = 10000                   # in ms, default
+  url                = "http://localhost:7777" # default
+  timeout            = 10000                   # in ms, default
+  reconcile_retries  = 10                      # default
+  reconcile_interval = 1000                    # in ms, default
 }

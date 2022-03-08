@@ -25,6 +25,16 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("BOB_TIMEOUT", 10000),
 			},
+			"reconcile_interval": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("BOB_RECONCILE_INTERVAL", 1000),
+			},
+			"reconcile_retries": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("BOB_RECONCILE_RETRIES", 10),
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"bob_resource_provider": resource_provider.Resource(),
@@ -40,5 +50,5 @@ func providerConfigure(ctx context.Context, data *schema.ResourceData) (interfac
 	timeout := time.Duration(data.Get("timeout").(int)) * time.Millisecond
 	var diags diag.Diagnostics
 
-	return c.NewClient(url, timeout), diags
+	return c.NewClient(url, timeout, data.Get("reconcile_retries").(int), time.Duration(data.Get("reconcile_interval").(int))*time.Millisecond), diags
 }
