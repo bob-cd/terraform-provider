@@ -103,20 +103,22 @@ func read(ctx context.Context, data *schema.ResourceData, meta interface{}) diag
 	client := meta.(c.Client)
 
 	pipeline, err := client.FetchPipeline(data.Get("group").(string), data.Get("name").(string))
-	if err != nil && err.Error() != "no such pipeline" {
-		return diag.FromErr(err)
+	if err != nil {
+		if err.Error() == "no such pipeline" {
+			return diags
+		} else {
+			return diag.FromErr(err)
+		}
 	}
 
-	if err == nil {
-		pipeline = wrapArtifactProduction(pipeline) // Yes
+	pipeline = wrapArtifactProduction(pipeline) // Yes
 
-		data.Set("group", pipeline["group"])
-		data.Set("name", pipeline["name"])
-		data.Set("image", pipeline["image"])
-		data.Set("vars", get(pipeline, "vars", map[string]string{}))
-		data.Set("resource", get(pipeline, "resources", []interface{}{}))
-		data.Set("step", pipeline["steps"])
-	}
+	data.Set("group", pipeline["group"])
+	data.Set("name", pipeline["name"])
+	data.Set("image", pipeline["image"])
+	data.Set("vars", get(pipeline, "vars", map[string]string{}))
+	data.Set("resource", get(pipeline, "resources", []interface{}{}))
+	data.Set("step", pipeline["steps"])
 
 	return diags
 }
