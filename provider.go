@@ -45,7 +45,7 @@ func Provider() *schema.Provider {
 	}
 }
 
-func providerConfigure(ctx context.Context, data *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func providerConfigure(ctx context.Context, data *schema.ResourceData) (any, diag.Diagnostics) {
 	url := data.Get("url").(string)
 	timeout := time.Duration(data.Get("timeout").(int)) * time.Millisecond
 	var diags diag.Diagnostics

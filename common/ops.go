@@ -121,7 +121,7 @@ func (c Client) Delete(entity string, name string) error {
 	return err
 }
 
-func (c Client) ReconcilePipeline(pipeline map[string]interface{}) func() bool {
+func (c Client) ReconcilePipeline(pipeline map[string]any) func() bool {
 	return func() bool {
 		expected, err := c.FetchPipeline(pipeline["group"].(string), pipeline["name"].(string))
 
@@ -129,7 +129,7 @@ func (c Client) ReconcilePipeline(pipeline map[string]interface{}) func() bool {
 	}
 }
 
-func (c Client) FetchPipeline(group string, name string) (map[string]interface{}, error) {
+func (c Client) FetchPipeline(group string, name string) (map[string]any, error) {
 	params := url.Values{
 		"group": {group},
 		"name":  {name},
@@ -145,7 +145,7 @@ func (c Client) FetchPipeline(group string, name string) (map[string]interface{}
 	}
 	defer r.Body.Close()
 
-	var response map[string][]map[string]interface{}
+	var response map[string][]map[string]any
 	err = json.NewDecoder(r.Body).Decode(&response)
 	if err != nil {
 		return nil, err
@@ -159,7 +159,7 @@ func (c Client) FetchPipeline(group string, name string) (map[string]interface{}
 	return pipelines[0], nil
 }
 
-func (c Client) PostPipeline(group string, name string, attrs map[string]interface{}) error {
+func (c Client) PostPipeline(group string, name string, attrs map[string]any) error {
 	postBody, err := json.Marshal(attrs)
 	if err != nil {
 		return err

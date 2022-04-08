@@ -19,7 +19,7 @@ func Resource() *schema.Resource {
 	}
 }
 
-func get(m map[string]interface{}, key string, def interface{}) interface{} {
+func get(m map[string]any, key string, def any) any {
 	value, exists := m[key]
 
 	if !exists {
@@ -29,12 +29,12 @@ func get(m map[string]interface{}, key string, def interface{}) interface{} {
 	return value
 }
 
-func unwrapArtifactProduction(attrs map[string]interface{}) map[string]interface{} {
-	steps := attrs["steps"].([]interface{})
+func unwrapArtifactProduction(attrs map[string]any) map[string]any {
+	steps := attrs["steps"].([]any)
 
 	for _, step := range steps {
-		s := step.(map[string]interface{})
-		produces_artifact := s["produces_artifact"].([]interface{})
+		s := step.(map[string]any)
+		produces_artifact := s["produces_artifact"].([]any)
 
 		if len(produces_artifact) == 0 {
 			delete(s, "produces_artifact")
@@ -46,17 +46,17 @@ func unwrapArtifactProduction(attrs map[string]interface{}) map[string]interface
 	return attrs
 }
 
-func wrapArtifactProduction(attrs map[string]interface{}) map[string]interface{} {
-	steps := attrs["steps"].([]interface{})
+func wrapArtifactProduction(attrs map[string]any) map[string]any {
+	steps := attrs["steps"].([]any)
 
 	for _, step := range steps {
-		s := step.(map[string]interface{})
+		s := step.(map[string]any)
 
 		val, exists := s["produces_artifact"]
 		if exists {
-			s["produces_artifact"] = []interface{}{val}
+			s["produces_artifact"] = []any{val}
 		} else {
-			s["produces_artifact"] = []interface{}{}
+			s["produces_artifact"] = []any{}
 		}
 	}
 
@@ -66,7 +66,7 @@ func wrapArtifactProduction(attrs map[string]interface{}) map[string]interface{}
 func write(data *schema.ResourceData, client c.Client) error {
 	group := data.Get("group").(string)
 	name := data.Get("name").(string)
-	attrs := map[string]interface{}{
+	attrs := map[string]any{
 		"image": data.Get("image"),
 		"steps": data.Get("step"),
 	}
@@ -79,7 +79,7 @@ func write(data *schema.ResourceData, client c.Client) error {
 
 	resources := data.Get("resource")
 	if resources == nil {
-		resources = []interface{}{}
+		resources = []any{}
 	}
 	attrs["resources"] = resources
 
@@ -98,7 +98,7 @@ func write(data *schema.ResourceData, client c.Client) error {
 	return nil
 }
 
-func read(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func read(ctx context.Context, data *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(c.Client)
 
@@ -117,13 +117,13 @@ func read(ctx context.Context, data *schema.ResourceData, meta interface{}) diag
 	data.Set("name", pipeline["name"])
 	data.Set("image", pipeline["image"])
 	data.Set("vars", get(pipeline, "vars", map[string]string{}))
-	data.Set("resource", get(pipeline, "resources", []interface{}{}))
+	data.Set("resource", get(pipeline, "resources", []any{}))
 	data.Set("step", pipeline["steps"])
 
 	return diags
 }
 
-func create(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func create(ctx context.Context, data *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if err := write(data, meta.(c.Client)); err != nil {
@@ -137,7 +137,7 @@ func create(ctx context.Context, data *schema.ResourceData, meta interface{}) di
 	return diags
 }
 
-func update(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func update(ctx context.Context, data *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if err := write(data, meta.(c.Client)); err != nil {
@@ -149,7 +149,7 @@ func update(ctx context.Context, data *schema.ResourceData, meta interface{}) di
 	return diags
 }
 
-func deleteResource(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func deleteResource(ctx context.Context, data *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(c.Client)
 	group := data.Get("group").(string)

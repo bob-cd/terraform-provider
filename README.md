@@ -12,7 +12,7 @@ Experimental
 ## Requirements
 - [Terraform](https://www.terraform.io/downloads) 1.0+
 - A running instance of [Bob](https://bob-cd.github.io/pages/getting-started.html)
-- [Go](https://go.dev/dl/) 1.16+
+- [Go](https://go.dev/dl/) 1.18+
 - A recent version of [Babashka](https://github.com/babashka/babashka#installation)
 
 ## Installing
