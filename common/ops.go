@@ -85,7 +85,8 @@ func (c Client) FetchAll(entity string) ([]map[string]string, error) {
 
 func (c Client) Post(entity string, name string, url string) error {
 	postBody, err := json.Marshal(map[string]string{
-		"url": url,
+		"name": name,
+		"url":  url,
 	})
 	if err != nil {
 		return err
@@ -93,7 +94,7 @@ func (c Client) Post(entity string, name string, url string) error {
 
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("%s/%ss/%s", c.Url, entity, name),
+		fmt.Sprintf("%s/%ss", c.Url, entity),
 		bytes.NewBuffer(postBody),
 	)
 	req.Header.Add("Content-Type", "application/json")
@@ -159,7 +160,7 @@ func (c Client) FetchPipeline(group string, name string) (map[string]any, error)
 	return pipelines[0], nil
 }
 
-func (c Client) PostPipeline(group string, name string, attrs map[string]any) error {
+func (c Client) PostPipeline(attrs map[string]any) error {
 	postBody, err := json.Marshal(attrs)
 	if err != nil {
 		return err
@@ -167,7 +168,7 @@ func (c Client) PostPipeline(group string, name string, attrs map[string]any) er
 
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("%s/pipelines/groups/%s/names/%s", c.Url, group, name),
+		c.Url+"%s/pipelines",
 		bytes.NewBuffer(postBody),
 	)
 	req.Header.Add("Content-Type", "application/json")

@@ -64,9 +64,9 @@ func wrapArtifactProduction(attrs map[string]any) map[string]any {
 }
 
 func write(data *schema.ResourceData, client c.Client) error {
-	group := data.Get("group").(string)
-	name := data.Get("name").(string)
 	attrs := map[string]any{
+		"group": data.Get("group"),
+		"name":  data.Get("name"),
 		"image": data.Get("image"),
 		"steps": data.Get("step"),
 	}
@@ -85,12 +85,10 @@ func write(data *schema.ResourceData, client c.Client) error {
 
 	attrs = unwrapArtifactProduction(attrs) // Yes
 
-	if err := client.PostPipeline(group, name, attrs); err != nil {
+	if err := client.PostPipeline(attrs); err != nil {
 		return err
 	}
 
-	attrs["group"] = group
-	attrs["name"] = name
 	if err := c.WaitForCondition(client.ReconcilePipeline(attrs), client.ReconcileRetries, client.ReconcileInterval); err != nil {
 		return err
 	}
